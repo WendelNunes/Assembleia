@@ -24,13 +24,17 @@ import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotDeleteException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
 
+import lombok.extern.slf4j.Slf4j;
+
 @ControllerAdvice
+@Slf4j
 public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public final ResponseEntity<ErrorResponseDTO> handleAllExceptions(Exception ex, HttpServletRequest request) {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) //
-				.body(createErrorResponse("Server Error", //
+				.body(createErrorResponse(ex, //
+						"Server Error", //
 						Collections.singletonList(ex.getLocalizedMessage()), //
 						request)); //
 	}
@@ -39,7 +43,7 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 	public final ResponseEntity<ErrorResponseDTO> handleConflictException(ConflictException ex,
 			HttpServletRequest request) {
 		return ResponseEntity.status(HttpStatus.CONFLICT) //
-				.body(createErrorResponse(ex.getLocalizedMessage(), //
+				.body(createErrorResponse(ex, //
 						request)); //
 	}
 
@@ -47,7 +51,7 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 	public final ResponseEntity<ErrorResponseDTO> handleDateTimeException(DateTimeException ex,
 			HttpServletRequest request) {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST) //
-				.body(createErrorResponse(ex.getLocalizedMessage(), //
+				.body(createErrorResponse(ex, //
 						request)); //
 	}
 
@@ -55,7 +59,7 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 	public final ResponseEntity<ErrorResponseDTO> handleNotFoundException(NotFoundException ex,
 			HttpServletRequest request) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND) //
-				.body(createErrorResponse(ex.getLocalizedMessage(), //
+				.body(createErrorResponse(ex, //
 						ex.getDetails(), //
 						request)); //
 	}
@@ -64,7 +68,7 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 	public final ResponseEntity<ErrorResponseDTO> handleNotDeleteException(NotDeleteException ex,
 			HttpServletRequest request) {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST) //
-				.body(createErrorResponse(ex.getLocalizedMessage(), //
+				.body(createErrorResponse(ex, //
 						request)); //
 	}
 
@@ -74,23 +78,29 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 		List<String> details = ex.getBindingResult().getAllErrors().stream().map(ObjectError::getDefaultMessage)
 				.collect(Collectors.toList());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST) //
-				.body(createErrorResponse("Erro de Validação", //
+				.body(createErrorResponse(ex, //
+						"Erro de validação", //
 						details, //
 						((ServletWebRequest) request).getRequest())); //
 	}
 
-	private static ErrorResponseDTO createErrorResponse(String message, List<String> details,
+	private static ErrorResponseDTO createErrorResponse(Throwable throwable, String message, List<String> details,
 			HttpServletRequest request) {
+		log.error("Error: " + throwable.getMessage(), throwable);
 		return ErrorResponseDTO.builder() //
-				.message(message) //
+				.message(message != null ? message : throwable.getMessage()) //
 				.details(details) //
 				.timestamp(OffsetDateTime.now()) //
 				.path(request.getRequestURI()) //
 				.build();
 	}
 
-	private static ErrorResponseDTO createErrorResponse(String message, HttpServletRequest request) {
-		return createErrorResponse(message, null, request);
+	private static ErrorResponseDTO createErrorResponse(Throwable throwable, List<String> details,
+			HttpServletRequest request) {
+		return createErrorResponse(throwable, null, null, request);
 	}
 
+	private static ErrorResponseDTO createErrorResponse(Throwable throwable, HttpServletRequest request) {
+		return createErrorResponse(throwable, null, null, request);
+	}
 }

@@ -40,7 +40,7 @@ public class AssociadoController {
 
 	@ApiOperation(value = "Cria um novo associado")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 201, message = "Cadastro realizada com sucesso", response = AssociadoDTO.class), //
+			@ApiResponse(code = 201, message = "Cadastro real3izada com sucesso", response = AssociadoDTO.class), //
 			@ApiResponse(code = 409, message = "CPF já cadastrado", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 400, message = "Requisição mal formada", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
