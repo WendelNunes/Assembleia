@@ -23,7 +23,7 @@ public class SessaoService {
 	private DateTimeUtil dateTimeUtil;
 
 	public Sessao abrir(Sessao sessao) throws DateTimeException, NotFoundException {
-		if (!this.pautaService.verificaExistePautaPorId(sessao.getId())) {
+		if (!this.pautaService.verificaExistePautaPorId(sessao.getPauta().getId())) {
 			throw new NotFoundException("Pauta inexistente");
 		}
 		if (sessao.getDataHoraInicio().isBefore(this.dateTimeUtil.currentDateTime())) {

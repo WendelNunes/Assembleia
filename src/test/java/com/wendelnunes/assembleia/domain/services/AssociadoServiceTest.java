@@ -2,7 +2,6 @@ package com.wendelnunes.assembleia.domain.services;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -143,9 +142,9 @@ public class AssociadoServiceTest {
 	@Test
 	@DisplayName("Verifica obter associado por id inexistente")
 	void obterAssociadoPorIdInexistente() throws NotFoundException {
-		when(this.associadoRepository.findById(Mockito.anyLong())).thenReturn(null);
-		Associado associado = this.associadoService.obterPorId(Long.valueOf(1));
-		assertNull(associado);
+		when(this.associadoRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
+		assertThrows(NotFoundException.class, () -> this.associadoService.obterPorId(Long.valueOf(1)),
+				"Associado inexistente");
 	}
 
 	@Test
