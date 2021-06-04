@@ -1,0 +1,8 @@
+# PORTA
+app.port=<PORTA>
+
+# BANCO DE DADOS
+app.db.url=<URL_DB:DB_PORT>
+app.db.name=<NAME_DB>
+app.db.username=<USER_DB>
+app.db.password=<PASSWORD_DB>
