@@ -67,6 +67,7 @@ O log é gerado no diretório logs que será criado no mesmo caminho que o execu
 
 Com o pouco tempo que tive para a implementação o projeto pode passar por muitas melhorias como as listadas abaixo: 
 
+- Implementar controle de acesso por usuário usando por exemplo JWT para autenticação do mesmo
 - Nas listagens poder fazer filtros, ordenação e paginação dos dados
 - Fazer uma melhoria na geração dos Logs possibilitando assim fazer um monitoramento melhor da API
 - Fazer testes dos controllers garantindo, os status retornados e também o seu retorno como garantir que os DTO não 
