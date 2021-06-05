@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +35,6 @@ import lombok.AllArgsConstructor;
 public class PautaController {
 
 	public PautaService pautaService;
-	public ModelMapper modelMapper;
 
 	@ApiOperation(value = "Cria uma nova pauta")
 	@ApiResponses(value = { //
@@ -46,12 +44,12 @@ public class PautaController {
 	})
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PautaDTO> criar(@Valid @RequestBody PautaDTO pauta) {
-		Pauta pautaSalvo = this.pautaService.criar(toPauta(pauta));
+		Pauta pautaSalvo = this.pautaService.criar(PautaDTO.toPauta(pauta));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
 				.buildAndExpand(pautaSalvo.getId()) //
 				.toUri(); //
-		return ResponseEntity.created(uri).body(toPautaDTO(pautaSalvo));
+		return ResponseEntity.created(uri).body(PautaDTO.toPautaDTO(pautaSalvo));
 	}
 
 	@ApiOperation(value = "Atualiza uma pauta")
@@ -64,10 +62,10 @@ public class PautaController {
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PautaDTO> atualizar(@PathVariable("id") Long id, @Valid @RequestBody PautaDTO pauta)
 			throws NotFoundException {
-		Pauta p = toPauta(pauta);
+		Pauta p = PautaDTO.toPauta(pauta);
 		p.setId(id);
 		Pauta updated = this.pautaService.atualizar(p);
-		return ResponseEntity.ok(toPautaDTO(updated));
+		return ResponseEntity.ok(PautaDTO.toPautaDTO(updated));
 	}
 
 	@ApiOperation(value = "Deleta uma pauta")
@@ -92,7 +90,7 @@ public class PautaController {
 	})
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PautaDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
-		return ResponseEntity.ok().body(toPautaDTO(this.pautaService.obterPorId(id)));
+		return ResponseEntity.ok().body(PautaDTO.toPautaDTO(this.pautaService.obterPorId(id)));
 	}
 
 	@ApiOperation(value = "Obtém todas as pautas")
@@ -104,15 +102,7 @@ public class PautaController {
 	public List<PautaDTO> obterTodos() {
 		return this.pautaService.obterTodos() //
 				.stream() //
-				.map(this::toPautaDTO) //
+				.map(PautaDTO::toPautaDTO) //
 				.collect(Collectors.toList()); //
-	}
-
-	private Pauta toPauta(PautaDTO pautaDTO) {
-		return this.modelMapper.map(pautaDTO, Pauta.class);
-	}
-
-	private PautaDTO toPautaDTO(Pauta pauta) {
-		return this.modelMapper.map(pauta, PautaDTO.class);
 	}
 }

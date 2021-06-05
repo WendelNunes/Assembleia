@@ -1,11 +1,12 @@
 package com.wendelnunes.assembleia.api.dtos;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.br.CPF;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
@@ -15,11 +16,9 @@ import lombok.Data;
 @ApiModel(value = "Voto")
 public class VotoDTO {
 
-	@JsonProperty(access = Access.READ_ONLY)
-	private Long id;
-	private Long idSessao;
-	@NotNull(message = "Id do associado deve ser informado")
-	private Long idAssociado;
+	@NotBlank(message = "CPF deve ser informado")
+	@CPF(message = "CPF é inválido")
+	private String cpf;
 	@NotNull(message = "Valor deve ser informado")
 	private Boolean valor;
 }

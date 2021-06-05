@@ -19,6 +19,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.wendelnunes.assembleia.api.dtos.ErrorResponseDTO;
+import com.wendelnunes.assembleia.exceptions.BadRequestException;
 import com.wendelnunes.assembleia.exceptions.ConflictException;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotDeleteException;
@@ -61,6 +62,14 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND) //
 				.body(createErrorResponse(ex, //
 						ex.getDetails(), //
+						request)); //
+	}
+
+	@ExceptionHandler(BadRequestException.class)
+	public final ResponseEntity<ErrorResponseDTO> handleNotFoundException(BadRequestException ex,
+			HttpServletRequest request) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST) //
+				.body(createErrorResponse(ex, //
 						request)); //
 	}
 

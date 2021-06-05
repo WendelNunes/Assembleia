@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +35,6 @@ import lombok.AllArgsConstructor;
 public class AssociadoController {
 
 	public AssociadoService associadoService;
-	public ModelMapper modelMapper;
 
 	@ApiOperation(value = "Cria um novo associado")
 	@ApiResponses(value = { //
@@ -47,12 +45,12 @@ public class AssociadoController {
 	})
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AssociadoDTO> criar(@Valid @RequestBody AssociadoDTO associado) throws ConflictException {
-		Associado associadoSalvo = this.associadoService.criar(toAssociado(associado));
+		Associado associadoSalvo = this.associadoService.criar(AssociadoDTO.toAssociado(associado));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
 				.buildAndExpand(associadoSalvo.getId()) //
 				.toUri(); //
-		return ResponseEntity.created(uri).body(toAssociadoDTO(associadoSalvo));
+		return ResponseEntity.created(uri).body(AssociadoDTO.toAssociadoDTO(associadoSalvo));
 	}
 
 	@ApiOperation(value = "Atualiza um associado")
@@ -66,10 +64,10 @@ public class AssociadoController {
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AssociadoDTO> atualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AssociadoDTO associado) throws ConflictException, NotFoundException {
-		Associado a = toAssociado(associado);
+		Associado a = AssociadoDTO.toAssociado(associado);
 		a.setId(id);
 		Associado updated = this.associadoService.atualizar(a);
-		return ResponseEntity.ok(toAssociadoDTO(updated));
+		return ResponseEntity.ok(AssociadoDTO.toAssociadoDTO(updated));
 	}
 
 	@ApiOperation(value = "Deleta um associado")
@@ -94,7 +92,7 @@ public class AssociadoController {
 	})
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AssociadoDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
-		return ResponseEntity.ok().body(toAssociadoDTO(this.associadoService.obterPorId(id)));
+		return ResponseEntity.ok().body(AssociadoDTO.toAssociadoDTO(this.associadoService.obterPorId(id)));
 	}
 
 	@ApiOperation(value = "Obtém todos os associados")
@@ -106,15 +104,7 @@ public class AssociadoController {
 	public List<AssociadoDTO> obterTodos() {
 		return this.associadoService.obterTodos() //
 				.stream() //
-				.map(this::toAssociadoDTO) //
+				.map(AssociadoDTO::toAssociadoDTO) //
 				.collect(Collectors.toList()); //
-	}
-
-	private Associado toAssociado(AssociadoDTO associadoDTO) {
-		return this.modelMapper.map(associadoDTO, Associado.class);
-	}
-
-	private AssociadoDTO toAssociadoDTO(Associado associado) {
-		return this.modelMapper.map(associado, AssociadoDTO.class);
 	}
 }
