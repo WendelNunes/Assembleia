@@ -69,9 +69,9 @@ Com o pouco tempo que tive para a implementação o projeto pode passar por muit
 
 - Implementar controle de acesso por usuário usando por exemplo JWT para autenticação do mesmo
 - Nas listagens poder fazer filtros, ordenação e paginação dos dados
-- Fazer uma melhoria na geração dos Logs possibilitando assim fazer um monitoramento melhor da API
-- Fazer testes dos controllers garantindo, os status retornados e também o seu retorno como garantir que os DTO não 
+- Fazer uma melhoria na geração dos logs possibilitando assim fazer um monitoramento melhor da API
+- Fazer testes dos controllers garantindo os status retornados e também o seu retorno como garantir que os DTO não 
   foi modificado de forma que quebre a integração
 - Fazer testes dos repositorys
 - No caso de comunicação com serviços terceiros implementar um circuit breaker garantindo assim um retorno rápido para 
-  o cliente em caso de demora do serviço terceiro e dependendo do que esse serviço retorna pensar no caso de uso de cach
+  o cliente em caso de demora do serviço terceiro
