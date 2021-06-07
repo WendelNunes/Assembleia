@@ -23,8 +23,4 @@ public class PautaDTO {
 	public static Pauta toPauta(PautaDTO pautaDTO) {
 		return new ModelMapper().map(pautaDTO, Pauta.class);
 	}
-
-	public static PautaDTO toPautaDTO(Pauta pauta) {
-		return new ModelMapper().map(pauta, PautaDTO.class);
-	}
 }

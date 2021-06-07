@@ -1,8 +1,6 @@
 package com.wendelnunes.assembleia.api.controllers;
 
 import java.net.URI;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -17,6 +15,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.wendelnunes.assembleia.api.dtos.AssociadoDTO;
 import com.wendelnunes.assembleia.api.dtos.ErrorResponseDTO;
+import com.wendelnunes.assembleia.api.dtos.FormularioDTO;
+import com.wendelnunes.assembleia.api.dtos.SelecaoDTO;
 import com.wendelnunes.assembleia.domain.entities.Associado;
 import com.wendelnunes.assembleia.domain.services.AssociadoService;
 import com.wendelnunes.assembleia.exceptions.ConflictException;
@@ -30,10 +30,11 @@ import lombok.AllArgsConstructor;
 
 @Api(tags = { "Associado" })
 @RestController
-@RequestMapping(value = "/associados")
+@RequestMapping(value = AssociadoController.PATH)
 @AllArgsConstructor
 public class AssociadoController {
 
+	public static final String PATH = "/associados";
 	public AssociadoService associadoService;
 
 	@ApiOperation(value = "Cria um novo associado")
@@ -44,13 +45,13 @@ public class AssociadoController {
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<AssociadoDTO> criar(@Valid @RequestBody AssociadoDTO associado) throws ConflictException {
+	public ResponseEntity<FormularioDTO> criar(@Valid @RequestBody AssociadoDTO associado) throws ConflictException {
 		Associado associadoSalvo = this.associadoService.criar(AssociadoDTO.toAssociado(associado));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
 				.buildAndExpand(associadoSalvo.getId()) //
 				.toUri(); //
-		return ResponseEntity.created(uri).body(AssociadoDTO.toAssociadoDTO(associadoSalvo));
+		return ResponseEntity.created(uri).body(FormularioDTO.from(associadoSalvo, this.getPath()));
 	}
 
 	@ApiOperation(value = "Atualiza um associado")
@@ -62,12 +63,12 @@ public class AssociadoController {
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<AssociadoDTO> atualizar(@PathVariable("id") Long id,
+	public ResponseEntity<FormularioDTO> atualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AssociadoDTO associado) throws ConflictException, NotFoundException {
 		Associado a = AssociadoDTO.toAssociado(associado);
 		a.setId(id);
 		Associado updated = this.associadoService.atualizar(a);
-		return ResponseEntity.ok(AssociadoDTO.toAssociadoDTO(updated));
+		return ResponseEntity.ok(FormularioDTO.from(updated, this.getPath()));
 	}
 
 	@ApiOperation(value = "Deleta um associado")
@@ -85,26 +86,27 @@ public class AssociadoController {
 
 	@ApiOperation(value = "Obtém um associado por id")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = AssociadoDTO.class), //
+			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = FormularioDTO.class), //
 			@ApiResponse(code = 400, message = "Requisição mal formada", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 404, message = "Associado inexistente", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<AssociadoDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
-		return ResponseEntity.ok().body(AssociadoDTO.toAssociadoDTO(this.associadoService.obterPorId(id)));
+	public ResponseEntity<FormularioDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
+		return ResponseEntity.ok().body(FormularioDTO.from(this.associadoService.obterPorId(id), this.getPath()));
 	}
 
 	@ApiOperation(value = "Obtém todos os associados")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = AssociadoDTO.class), //
+			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = SelecaoDTO.class), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public List<AssociadoDTO> obterTodos() {
-		return this.associadoService.obterTodos() //
-				.stream() //
-				.map(AssociadoDTO::toAssociadoDTO) //
-				.collect(Collectors.toList()); //
+	public ResponseEntity<SelecaoDTO> obterTodos() {
+		return ResponseEntity.ok().body(SelecaoDTO.fromAssociado(this.associadoService.obterTodos(), this.getPath()));
+	}
+
+	public String getPath() {
+		return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + PATH;
 	}
 }

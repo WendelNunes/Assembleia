@@ -24,13 +24,9 @@ public class SessaoDTO {
 	private Long idPauta;
 	@NotBlank(message = "Descrição da pauta deve ser informado")
 	private String descricao;
-	@NotBlank(message = "Data/Hora início deve ser informada")
+	@NotNull(message = "Data/Hora início deve ser informada")
 	private OffsetDateTime dataHoraInicio;
 	private OffsetDateTime dataHoraFechamento;
-
-	public static SessaoDTO toSessaoDTO(Sessao sessao) {
-		return new ModelMapper().map(sessao, SessaoDTO.class);
-	}
 
 	public static Sessao toSessao(SessaoDTO sessaoDTO) {
 		return new ModelMapper().map(sessaoDTO, Sessao.class);
