@@ -9,6 +9,7 @@ import com.wendelnunes.assembleia.domain.entities.Associado;
 import com.wendelnunes.assembleia.domain.repositories.AssociadoRepository;
 import com.wendelnunes.assembleia.exceptions.ConflictException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
+import com.wendelnunes.assembleia.utils.StringUtil;
 
 import lombok.AllArgsConstructor;
 
@@ -23,6 +24,7 @@ public class AssociadoService {
 		if (associadoCadastrado.isPresent()) {
 			throw new ConflictException("CPF já cadastrado");
 		}
+		associado.setCPF(StringUtil.removeMask(associado.getCPF()));
 		return this.repository.save(associado);
 	}
 
@@ -34,6 +36,7 @@ public class AssociadoService {
 		if (associadoCadastrado.isPresent() && !associado.equals(associadoCadastrado.get())) {
 			throw new ConflictException("CPF já cadastrado");
 		}
+		associado.setCPF(StringUtil.removeMask(associado.getCPF()));
 		return this.repository.save(associado);
 	}
 
@@ -53,7 +56,7 @@ public class AssociadoService {
 	}
 
 	public Optional<Associado> obterPorCPF(String CPF) {
-		return this.repository.findByCPF(CPF);
+		return this.repository.findByCPF(StringUtil.removeMask(CPF));
 	}
 
 	public boolean verificaExistePorId(Long id) {

@@ -37,17 +37,17 @@ public class VotoService {
 
 	public Voto votar(Long idSessao, String CPF, Boolean valor) throws NotFoundException, DateTimeException,
 			ConflictException, JsonMappingException, JsonProcessingException, BadRequestException {
-		CPF = removeMask(CPF);
 		Sessao sessao = this.sessaoService.obterPorId(idSessao);
-		Associado associado = this.associadoService.obterPorCPF(CPF)
-				.orElseThrow(() -> new NotFoundException("Associado inexistente"));
-		if (!this.verificaAssociadoVotante(CPF)) {
-			throw new BadRequestException("Associado não autorizado a votar");
-		}
 		OffsetDateTime now = this.dateTimeUtil.currentDateTime();
 		if (!((now.isBefore(sessao.getDataHoraFechamento()) || now.isEqual(sessao.getDataHoraFechamento()))
 				&& (now.isAfter(sessao.getDataHoraInicio()) || now.isEqual(sessao.getDataHoraInicio())))) {
 			throw new DateTimeException("Sessão não está aberta");
+		}
+		CPF = removeMask(CPF);
+		Associado associado = this.associadoService.obterPorCPF(CPF)
+				.orElseThrow(() -> new NotFoundException("Associado inexistente"));
+		if (!this.verificaAssociadoVotante(CPF)) {
+			throw new BadRequestException("Associado não autorizado a votar");
 		}
 		if (this.verificaExistePorIdSessaoIdAssociado(sessao.getId(), associado.getId())) {
 			throw new ConflictException("O associado já votou");
