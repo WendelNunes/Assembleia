@@ -29,4 +29,8 @@ public class AssociadoDTO {
 	public static Associado toAssociado(AssociadoDTO associadoDTO) {
 		return new ModelMapper().map(associadoDTO, Associado.class);
 	}
+
+	public static AssociadoDTO from(Associado associado) {
+		return new ModelMapper().map(associado, AssociadoDTO.class);
+	}
 }

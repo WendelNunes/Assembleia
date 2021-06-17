@@ -31,4 +31,8 @@ public class SessaoDTO {
 	public static Sessao toSessao(SessaoDTO sessaoDTO) {
 		return new ModelMapper().map(sessaoDTO, Sessao.class);
 	}
+
+	public static SessaoDTO from(Sessao sessao) {
+		return new ModelMapper().map(sessao, SessaoDTO.class);
+	}
 }

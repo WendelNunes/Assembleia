@@ -1,4 +1,4 @@
-package com.wendelnunes.assembleia.api.controllers;
+package com.wendelnunes.assembleia.api.exceptions;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
 @Slf4j
-public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public final ResponseEntity<ErrorResponseDTO> handleAllExceptions(Exception ex, HttpServletRequest request) {

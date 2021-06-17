@@ -3,16 +3,13 @@ package com.wendelnunes.assembleia.domain.services;
 import static com.wendelnunes.assembleia.utils.StringUtil.removeMask;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wendelnunes.assembleia.clients.UserInfoClient;
 import com.wendelnunes.assembleia.domain.entities.Associado;
-import com.wendelnunes.assembleia.domain.entities.AssociadoVotante;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
 import com.wendelnunes.assembleia.domain.entities.Voto;
 import com.wendelnunes.assembleia.domain.repositories.VotoRepository;
@@ -28,12 +25,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class VotoService {
 
-	public static final String URL_CHECK = "https://user-info.herokuapp.com/users/{cpf}";
 	private VotoRepository votoRepository;
 	private SessaoService sessaoService;
 	private AssociadoService associadoService;
+	private UserInfoClient userInfoClient;
 	private DateTimeUtil dateTimeUtil;
-	private RestTemplate restTemplate;
 
 	public Voto votar(Long idSessao, String CPF, Boolean valor) throws NotFoundException, DateTimeException,
 			ConflictException, JsonMappingException, JsonProcessingException, BadRequestException {
@@ -46,7 +42,7 @@ public class VotoService {
 		CPF = removeMask(CPF);
 		Associado associado = this.associadoService.obterPorCPF(CPF)
 				.orElseThrow(() -> new NotFoundException("Associado inexistente"));
-		if (!this.verificaAssociadoVotante(CPF)) {
+		if (!this.userInfoClient.verificaAssociadoVotante(CPF)) {
 			throw new BadRequestException("Associado não autorizado a votar");
 		}
 		if (this.verificaExistePorIdSessaoIdAssociado(sessao.getId(), associado.getId())) {
@@ -61,12 +57,5 @@ public class VotoService {
 
 	public boolean verificaExistePorIdSessaoIdAssociado(Long idSessao, Long idAssociado) {
 		return this.votoRepository.existsVotoByIdSessaoAndIdAssociado(idSessao, idAssociado);
-	}
-
-	public boolean verificaAssociadoVotante(String CPF) throws JsonMappingException, JsonProcessingException {
-		String json = this.restTemplate.getForObject(URL_CHECK, String.class, Map.of("cpf", CPF));
-		return AssociadoVotante.valueOf(new ObjectMapper().readTree(json).get("status").asText())
-				.equals(AssociadoVotante.ABLE_TO_VOTE);
-
 	}
 }

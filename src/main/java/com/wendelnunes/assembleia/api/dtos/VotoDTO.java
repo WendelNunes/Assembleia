@@ -16,6 +16,8 @@ import lombok.Data;
 @ApiModel(value = "Voto")
 public class VotoDTO {
 
+	@NotNull(message = "Id da sessão deve ser informada")
+	private Long idSessao;
 	@NotBlank(message = "CPF deve ser informado")
 	@CPF(message = "CPF é inválido")
 	private String cpf;

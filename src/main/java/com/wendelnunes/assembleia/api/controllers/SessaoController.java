@@ -1,32 +1,28 @@
 package com.wendelnunes.assembleia.api.controllers;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.wendelnunes.assembleia.api.dtos.ErrorResponseDTO;
-import com.wendelnunes.assembleia.api.dtos.FormularioDTO;
-import com.wendelnunes.assembleia.api.dtos.SelecaoDTO;
+import com.wendelnunes.assembleia.api.dtos.ResultadoSessaoDTO;
 import com.wendelnunes.assembleia.api.dtos.SessaoDTO;
-import com.wendelnunes.assembleia.api.dtos.VotoDTO;
 import com.wendelnunes.assembleia.domain.entities.ResultadoSessao;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
 import com.wendelnunes.assembleia.domain.services.ResultadoSessaoService;
 import com.wendelnunes.assembleia.domain.services.SessaoService;
-import com.wendelnunes.assembleia.domain.services.VotoService;
-import com.wendelnunes.assembleia.exceptions.BadRequestException;
-import com.wendelnunes.assembleia.exceptions.ConflictException;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
 
@@ -38,83 +34,63 @@ import lombok.AllArgsConstructor;
 
 @Api(tags = { "Sessão" })
 @RestController
-@RequestMapping(value = SessaoController.PATH)
+@RequestMapping("/sessoes")
 @AllArgsConstructor
 public class SessaoController {
 
-	public static final String PATH = "/sessoes";
 	private SessaoService sessaoService;
-	private VotoService votoService;
 	private ResultadoSessaoService resultadoSessaoService;
 
 	@ApiOperation(value = "Abre uma nova sessão para a pauta")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 201, message = "Sessão aberta com sucesso", response = FormularioDTO.class), //
+			@ApiResponse(code = 201, message = "Sessão aberta com sucesso", response = SessaoDTO.class), //
 			@ApiResponse(code = 400, message = "Requisição mal formada", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 404, message = "Pauta inexistente", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
-	@RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<FormularioDTO> abrirSessao(@Valid @RequestBody SessaoDTO sessao)
+	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<SessaoDTO> abrirSessao(@Valid @RequestBody SessaoDTO sessao)
 			throws DateTimeException, NotFoundException {
 		Sessao created = this.sessaoService.abrir(SessaoDTO.toSessao(sessao));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
 				.buildAndExpand(created.getId()) //
 				.toUri(); //
-		return ResponseEntity.created(uri).body(FormularioDTO.from(created, this.getPath()));
+		return ResponseEntity.created(uri).body(SessaoDTO.from(created));
 	}
 
 	@ApiOperation(value = "Obtém uma sessão pelo id")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = FormularioDTO.class), //
+			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = SessaoDTO.class), //
 			@ApiResponse(code = 400, message = "Requisição mal formada", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 404, message = "Sessão inexistente", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<FormularioDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
-		return ResponseEntity.ok().body(FormularioDTO.from(this.sessaoService.obterPorId(id), this.getPath()));
-	}
-
-	@ApiOperation(value = "Realiza um voto na sessão")
-	@ApiResponses(value = { //
-			@ApiResponse(code = 200, message = "Voto realizado com sucesso", response = void.class), //
-			@ApiResponse(code = 400, message = "Requisição mal formada", response = ErrorResponseDTO.class), //
-			@ApiResponse(code = 404, message = "Dado não encontrado", response = ErrorResponseDTO.class), //
-			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
-	})
-	@RequestMapping(value = "/{id}/votar", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> votar(@PathVariable("id") Long id, @Valid @RequestBody VotoDTO voto)
-			throws NotFoundException, DateTimeException, ConflictException, JsonMappingException,
-			JsonProcessingException, BadRequestException {
-		this.votoService.votar(id, voto.getCpf(), voto.getValor());
-		return ResponseEntity.ok().build();
+	@GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<SessaoDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
+		return ResponseEntity.ok().body(SessaoDTO.from(this.sessaoService.obterPorId(id)));
 	}
 
 	@ApiOperation(value = "Obtém todas as sessões")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = SelecaoDTO.class), //
+			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = SessaoDTO.class, responseContainer = "List"), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
-	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<SelecaoDTO> obterTodos() {
-		return ResponseEntity.ok().body(SelecaoDTO.fromSessao(this.sessaoService.obterTodos(), this.getPath()));
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<SessaoDTO>> obterTodos() {
+		return ResponseEntity.ok()
+				.body(this.sessaoService.obterTodos().stream().map(SessaoDTO::from).collect(Collectors.toList()));
 	}
 
 	@ApiOperation(value = "Obtém o resultado parcial ou final da sessão")
 	@ApiResponses(value = { //
-			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = FormularioDTO.class), //
+			@ApiResponse(code = 200, message = "Requisição realizada com sucesso", response = ResultadoSessaoDTO.class), //
 			@ApiResponse(code = 404, message = "Dado não encontrado", response = ErrorResponseDTO.class), //
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
-	@RequestMapping(value = "/{id}/resultado", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<FormularioDTO> obterResultado(@PathVariable("id") Long id) throws NotFoundException {
+	@GetMapping(value = "/{id}/resultado", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ResultadoSessaoDTO> obterResultado(@PathVariable("id") Long id) throws NotFoundException {
 		ResultadoSessao resultadoSessao = this.resultadoSessaoService.obterPorIdSessao(id);
-		return ResponseEntity.ok().body(FormularioDTO.from(resultadoSessao, this.getPath()));
-	}
-
-	public String getPath() {
-		return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + PATH;
+		return ResponseEntity.ok().body(ResultadoSessaoDTO.from(resultadoSessao));
 	}
 }
