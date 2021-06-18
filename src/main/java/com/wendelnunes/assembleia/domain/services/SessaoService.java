@@ -1,6 +1,7 @@
 package com.wendelnunes.assembleia.domain.services;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,7 +11,6 @@ import com.wendelnunes.assembleia.domain.entities.Sessao;
 import com.wendelnunes.assembleia.domain.repositories.SessaoRepository;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
-import com.wendelnunes.assembleia.utils.DateTimeUtil;
 
 import lombok.AllArgsConstructor;
 
@@ -20,22 +20,29 @@ public class SessaoService {
 
 	private SessaoRepository sessaoRepository;
 	private PautaService pautaService;
-	private DateTimeUtil dateTimeUtil;
 
 	public Sessao abrir(Sessao sessao) throws DateTimeException, NotFoundException {
 		if (!this.pautaService.verificaExistePautaPorId(sessao.getPauta().getId())) {
 			throw new NotFoundException("Pauta inexistente");
 		}
-		if (sessao.getDataHoraInicio().isBefore(this.dateTimeUtil.currentDateTime())) {
+		if (!this.verificaSessaoComDataHoraMaiorIgualAtual(sessao)) {
 			throw new DateTimeException("Data/Hora início deve ser maior ou igual a atual");
 		}
 		sessao.setDataHoraFechamento(Optional.ofNullable(sessao.getDataHoraFechamento()) //
 				.orElse(sessao.getDataHoraInicio().plusMinutes(1))); //
-		if (sessao.getDataHoraFechamento().isBefore(sessao.getDataHoraInicio())
-				|| Duration.between(sessao.getDataHoraInicio(), sessao.getDataHoraFechamento()).toMinutes() < 1) {
+		if (!this.verificaSessaoComDiferencaMinimaUmMinuto(sessao)) {
 			throw new DateTimeException("Data/Hora inicio e fechamento deve ter uma diferença de no mínimo 1 minuto");
 		}
 		return this.sessaoRepository.save(sessao);
+	}
+
+	public boolean verificaSessaoComDataHoraMaiorIgualAtual(Sessao sessao) {
+		return sessao.getDataHoraInicio().isBefore(OffsetDateTime.now());
+	}
+
+	public boolean verificaSessaoComDiferencaMinimaUmMinuto(Sessao sessao) {
+		return sessao.getDataHoraFechamento().isBefore(sessao.getDataHoraInicio())
+				|| Duration.between(sessao.getDataHoraInicio(), sessao.getDataHoraFechamento()).toMinutes() >= 1;
 	}
 
 	public boolean verificaExistePorId(Long id) {

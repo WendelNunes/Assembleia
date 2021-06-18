@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -26,7 +27,6 @@ import com.wendelnunes.assembleia.domain.entities.Sessao;
 import com.wendelnunes.assembleia.domain.repositories.SessaoRepository;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
-import com.wendelnunes.assembleia.utils.DateTimeUtil;
 
 @SpringBootTest
 class SessaoServiceTest {
@@ -35,9 +35,8 @@ class SessaoServiceTest {
 	private SessaoRepository sessaoRepository;
 	@Mock
 	private PautaService pautaService;
-	@Mock
-	private DateTimeUtil dateTimeUtil;
 	@InjectMocks
+	@Spy
 	private SessaoService sessaoService;
 
 	private static Sessao criaSessao(Long id, String descricao, OffsetDateTime dataHoraInicio,
@@ -69,7 +68,8 @@ class SessaoServiceTest {
 	void abrirSessao() throws DateTimeException, NotFoundException {
 		Sessao sessao = criaSessao();
 		when(this.pautaService.verificaExistePautaPorId(Mockito.anyLong())).thenReturn(true);
-		when(this.dateTimeUtil.currentDateTime()).thenReturn(sessao.getDataHoraInicio());
+		doReturn(true).when(this.sessaoService).verificaSessaoComDataHoraMaiorIgualAtual(Mockito.any(Sessao.class));
+		doReturn(true).when(this.sessaoService).verificaSessaoComDiferencaMinimaUmMinuto(Mockito.any(Sessao.class));
 		when(this.sessaoRepository.save(Mockito.any(Sessao.class))).thenReturn(sessao);
 		Sessao sessaoNova = SerializationUtils.clone(sessao);
 		sessaoNova.setId(null);
@@ -84,7 +84,8 @@ class SessaoServiceTest {
 		Sessao sessao = criaSessao();
 		sessao.setDataHoraFechamento(sessao.getDataHoraInicio().plusMinutes(1));
 		when(this.pautaService.verificaExistePautaPorId(Mockito.anyLong())).thenReturn(true);
-		when(this.dateTimeUtil.currentDateTime()).thenReturn(sessao.getDataHoraInicio());
+		doReturn(true).when(this.sessaoService).verificaSessaoComDataHoraMaiorIgualAtual(Mockito.any(Sessao.class));
+		doReturn(true).when(this.sessaoService).verificaSessaoComDiferencaMinimaUmMinuto(Mockito.any(Sessao.class));
 		when(this.sessaoRepository.save(Mockito.any(Sessao.class))).thenReturn(sessao);
 		Sessao sessaoNova = SerializationUtils.clone(sessao);
 		sessaoNova.setId(null);
@@ -108,7 +109,7 @@ class SessaoServiceTest {
 	void abrirSessaoComDataHoraInicioAnteriorAtual() throws DateTimeException {
 		Sessao sessao = criaSessao();
 		when(this.pautaService.verificaExistePautaPorId(Mockito.anyLong())).thenReturn(true);
-		when(this.dateTimeUtil.currentDateTime()).thenReturn(sessao.getDataHoraInicio());
+		doReturn(false).when(this.sessaoService).verificaSessaoComDataHoraMaiorIgualAtual(Mockito.any(Sessao.class));
 		sessao.setDataHoraInicio(sessao.getDataHoraInicio().minusHours(1));
 		assertThrows(DateTimeException.class, () -> this.sessaoService.abrir(sessao),
 				"Data/Hora início deve ser maior ou igual a atual");
@@ -119,8 +120,8 @@ class SessaoServiceTest {
 	void abrirSessaoComDataHoraInicioFechamentoDiferencaMinimaUmMinuto() throws DateTimeException {
 		Sessao sessao = criaSessao();
 		when(this.pautaService.verificaExistePautaPorId(Mockito.anyLong())).thenReturn(true);
-		when(this.dateTimeUtil.currentDateTime()).thenReturn(sessao.getDataHoraInicio());
-		sessao.setDataHoraFechamento(this.dateTimeUtil.currentDateTime().plusSeconds(30));
+		doReturn(true).when(this.sessaoService).verificaSessaoComDataHoraMaiorIgualAtual(Mockito.any(Sessao.class));
+		doReturn(false).when(this.sessaoService).verificaSessaoComDiferencaMinimaUmMinuto(Mockito.any(Sessao.class));
 		assertThrows(DateTimeException.class, () -> this.sessaoService.abrir(sessao),
 				"Data/Hora inicio e fechamento deve ter uma diferença de no mínimo 1 minuto");
 	}

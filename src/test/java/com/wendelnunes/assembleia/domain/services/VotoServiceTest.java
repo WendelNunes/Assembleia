@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -16,12 +15,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.wendelnunes.assembleia.clients.UserInfoClient;
 import com.wendelnunes.assembleia.domain.entities.Associado;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
 import com.wendelnunes.assembleia.domain.entities.Voto;
@@ -30,13 +30,9 @@ import com.wendelnunes.assembleia.exceptions.BadRequestException;
 import com.wendelnunes.assembleia.exceptions.ConflictException;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
-import com.wendelnunes.assembleia.utils.DateTimeUtil;
 
 @SpringBootTest
 class VotoServiceTest {
-
-	private static String ABLE_TO_VOTE = "{\"status\": \"ABLE_TO_VOTE\"}";
-	private static String UNABLE_TO_VOTE = "{\"status\": \"UNABLE_TO_VOTE\"}";
 
 	@Mock
 	private VotoRepository votoRepository;
@@ -45,10 +41,9 @@ class VotoServiceTest {
 	@Mock
 	private AssociadoService associadoService;
 	@Mock
-	private RestTemplate restTemplate;
-	@Mock
-	private DateTimeUtil dateTimeUtil;
+	private UserInfoClient userInfoClient;
 	@InjectMocks
+	@Spy
 	private VotoService votoService;
 
 	private Voto criaVoto(Long id, Associado associado, Sessao sessao, boolean valor) {
@@ -87,11 +82,10 @@ class VotoServiceTest {
 	void votar() throws NotFoundException, DateTimeException, ConflictException, JsonMappingException,
 			JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(voto.getSessao().getDataHoraInicio()).when(this.dateTimeUtil).currentDateTime();
+		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
-		when(this.restTemplate.getForObject(Mockito.anyString(), Mockito.eq(String.class), Mockito.anyMap()))
-				.thenReturn(ABLE_TO_VOTE);
+		doReturn(true).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
 		doReturn(false).when(this.votoRepository).existsVotoByIdSessaoAndIdAssociado(Mockito.anyLong(),
 				Mockito.anyLong());
 		doReturn(SerializationUtils.clone(voto)).when(this.votoRepository).save(Mockito.any(Voto.class));
@@ -108,11 +102,10 @@ class VotoServiceTest {
 		OffsetDateTime currentDateTime = OffsetDateTime.now();
 		voto.getSessao().setDataHoraInicio(currentDateTime.minusHours(2));
 		voto.getSessao().setDataHoraFechamento(currentDateTime.minusHours(1));
-		doReturn(currentDateTime).when(this.dateTimeUtil).currentDateTime();
+		doReturn(false).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
-		when(this.restTemplate.getForObject(Mockito.anyString(), Mockito.eq(String.class), Mockito.anyMap()))
-				.thenReturn(ABLE_TO_VOTE);
+		doReturn(true).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
 		assertThrows(DateTimeException.class,
 				() -> this.votoService.votar(voto.getSessao().getId(), voto.getAssociado().getCPF(), voto.getValor()),
 				"Sessão não está aberta");
@@ -123,7 +116,7 @@ class VotoServiceTest {
 	void votarAssociadoInexistente() throws NotFoundException, DateTimeException, ConflictException,
 			JsonMappingException, JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(voto.getSessao().getDataHoraInicio()).when(this.dateTimeUtil).currentDateTime();
+		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.empty()).when(this.associadoService).obterPorCPF(Mockito.anyString());
 		assertThrows(NotFoundException.class,
@@ -136,11 +129,10 @@ class VotoServiceTest {
 	void votarAssociadoNaoVotante() throws NotFoundException, DateTimeException, ConflictException,
 			JsonMappingException, JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(voto.getSessao().getDataHoraInicio()).when(this.dateTimeUtil).currentDateTime();
+		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
-		when(this.restTemplate.getForObject(Mockito.anyString(), Mockito.eq(String.class), Mockito.anyMap()))
-				.thenReturn(UNABLE_TO_VOTE);
+		doReturn(false).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
 		assertThrows(BadRequestException.class,
 				() -> this.votoService.votar(voto.getSessao().getId(), voto.getAssociado().getCPF(), voto.getValor()),
 				"Associado não autorizado a votar");
@@ -151,11 +143,10 @@ class VotoServiceTest {
 	void votarAssociadoJaVotou() throws NotFoundException, DateTimeException, ConflictException, JsonMappingException,
 			JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(voto.getSessao().getDataHoraInicio()).when(this.dateTimeUtil).currentDateTime();
+		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
-		when(this.restTemplate.getForObject(Mockito.anyString(), Mockito.eq(String.class), Mockito.anyMap()))
-				.thenReturn(ABLE_TO_VOTE);
+		doReturn(true).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
 		doReturn(true).when(this.votoRepository).existsVotoByIdSessaoAndIdAssociado(Mockito.anyLong(),
 				Mockito.anyLong());
 		assertThrows(ConflictException.class,

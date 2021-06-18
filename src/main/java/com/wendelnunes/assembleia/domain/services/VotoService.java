@@ -17,7 +17,6 @@ import com.wendelnunes.assembleia.exceptions.BadRequestException;
 import com.wendelnunes.assembleia.exceptions.ConflictException;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
-import com.wendelnunes.assembleia.utils.DateTimeUtil;
 
 import lombok.AllArgsConstructor;
 
@@ -29,14 +28,11 @@ public class VotoService {
 	private SessaoService sessaoService;
 	private AssociadoService associadoService;
 	private UserInfoClient userInfoClient;
-	private DateTimeUtil dateTimeUtil;
 
 	public Voto votar(Long idSessao, String CPF, Boolean valor) throws NotFoundException, DateTimeException,
 			ConflictException, JsonMappingException, JsonProcessingException, BadRequestException {
 		Sessao sessao = this.sessaoService.obterPorId(idSessao);
-		OffsetDateTime now = this.dateTimeUtil.currentDateTime();
-		if (!((now.isBefore(sessao.getDataHoraFechamento()) || now.isEqual(sessao.getDataHoraFechamento()))
-				&& (now.isAfter(sessao.getDataHoraInicio()) || now.isEqual(sessao.getDataHoraInicio())))) {
+		if (!this.verificaSessaoAberta(sessao)) {
 			throw new DateTimeException("Sessão não está aberta");
 		}
 		CPF = removeMask(CPF);
@@ -53,6 +49,11 @@ public class VotoService {
 		voto.setAssociado(associado);
 		voto.setValor(valor);
 		return this.votoRepository.save(voto);
+	}
+
+	public boolean verificaSessaoAberta(Sessao sessao) {
+		OffsetDateTime now = OffsetDateTime.now();
+		return now.compareTo(sessao.getDataHoraInicio()) >= 0 && now.compareTo(sessao.getDataHoraFechamento()) <= 0;
 	}
 
 	public boolean verificaExistePorIdSessaoIdAssociado(Long idSessao, Long idAssociado) {
