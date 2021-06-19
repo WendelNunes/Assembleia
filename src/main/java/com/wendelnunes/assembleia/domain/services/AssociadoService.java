@@ -1,8 +1,13 @@
 package com.wendelnunes.assembleia.domain.services;
 
-import java.util.List;
+import static com.wendelnunes.assembleia.utils.SortUtil.createOrders;
+
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.wendelnunes.assembleia.domain.entities.Associado;
@@ -51,8 +56,10 @@ public class AssociadoService {
 		return this.repository.findById(id).orElseThrow(() -> new NotFoundException("Associado inexistente"));
 	}
 
-	public List<Associado> obterTodos() {
-		return this.repository.findAll();
+	public Page<Associado> obterTodos(Integer page, Integer pageSize, String... sort) {
+		Pageable paging = PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(10),
+				Sort.by(createOrders(sort)));
+		return this.repository.findAll(paging);
 	}
 
 	public Optional<Associado> obterPorCPF(String CPF) {

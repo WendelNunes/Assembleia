@@ -8,6 +8,7 @@ import org.modelmapper.ModelMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.wendelnunes.assembleia.domain.entities.Associado;
 
 import io.swagger.annotations.ApiModel;
@@ -18,6 +19,7 @@ import lombok.Data;
 @ApiModel(value = "Associado")
 public class AssociadoDTO {
 
+	@JsonProperty(access = Access.READ_ONLY)
 	private Long id;
 	@NotBlank(message = "CPF deve ser informado")
 	@CPF(message = "CPF é inválido")

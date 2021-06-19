@@ -27,7 +27,8 @@ public class SwaggerConfig {
 				.tags( //
 						new Tag("Associado", "API de manipulação de associados"), //
 						new Tag("Pauta", "API de manipulação de pautas"), //
-						new Tag("Sessão", "API de manipulação de sessões")) //
+						new Tag("Sessão", "API de manipulação de sessões"), //
+						new Tag("Voto", "API de manipulação de votos")) //
 				.select() //
 				.apis(RequestHandlerSelectors.withClassAnnotation(RestController.class)) //
 				.paths(PathSelectors.any()) //

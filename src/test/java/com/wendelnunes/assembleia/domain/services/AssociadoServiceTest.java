@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.wendelnunes.assembleia.domain.entities.Associado;
 import com.wendelnunes.assembleia.domain.repositories.AssociadoRepository;
@@ -32,6 +34,7 @@ public class AssociadoServiceTest {
 	@Mock
 	private AssociadoRepository associadoRepository;
 	@InjectMocks
+	@Spy
 	private AssociadoService associadoService;
 
 	private static Associado criaAssociado() {
@@ -54,8 +57,8 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica criar associado")
 	void verificaAssociadoCriadoComSucesso() throws ConflictException {
 		Associado associado = criaAssociado();
-		when(this.associadoRepository.save(Mockito.any(Associado.class))).thenReturn(associado);
-		when(this.associadoRepository.findByCPF(Mockito.anyString())).thenReturn(Optional.empty());
+		doReturn(Optional.empty()).when(this.associadoRepository).findByCPF(Mockito.anyString());
+		doReturn(associado).when(this.associadoRepository).save(Mockito.any(Associado.class));
 		Associado associadoNovo = SerializationUtils.clone(associado);
 		associadoNovo.setId(null);
 		associadoNovo = this.associadoService.criar(associadoNovo);
@@ -67,7 +70,7 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica criar associado com CPF já cadastrado")
 	void verificaCriarAssociadoCPFJaCadastrado() throws ConflictException {
 		Associado associado = criaAssociado();
-		when(this.associadoRepository.findByCPF(Mockito.anyString())).thenReturn(Optional.of(associado));
+		doReturn(Optional.of(associado)).when(this.associadoRepository).findByCPF(Mockito.anyString());
 		Associado associadoNovo = SerializationUtils.clone(associado);
 		associadoNovo.setId(null);
 		assertThrows(ConflictException.class, () -> this.associadoService.criar(associadoNovo), "CPF já cadastrado");
@@ -77,7 +80,7 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica atualizar associado")
 	void verificaAtualizarAssociado() throws ConflictException {
 		Associado associado = criaAssociado();
-		when(this.associadoRepository.save(Mockito.any(Associado.class))).thenReturn(associado);
+		doReturn(associado).when(this.associadoRepository).save(Mockito.any(Associado.class));
 		Associado associadoNovo = this.associadoService.criar(SerializationUtils.clone(associado));
 		assertNotNull(associadoNovo);
 		assertTrue(new ReflectionEquals(associadoNovo).matches(associado));
@@ -87,8 +90,8 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica atualizar associado com CPF já cadastrado para outro usuario")
 	void verificaAtualizarAssociadoCPFCadastradoOutroUsuario() throws ConflictException {
 		Associado associado = criaAssociado();
-		when(this.associadoService.verificaExistePorId(Mockito.anyLong())).thenReturn(true);
-		when(this.associadoRepository.findByCPF(Mockito.anyString())).thenReturn(Optional.of(associado));
+		doReturn(true).when(this.associadoService).verificaExistePorId(Mockito.anyLong());
+		doReturn(Optional.of(associado)).when(this.associadoRepository).findByCPF(Mockito.anyString());
 		Associado associadoNovo = criaAssociadoDois();
 		associadoNovo.setCPF(associado.getCPF());
 		assertThrows(ConflictException.class, () -> this.associadoService.atualizar(associadoNovo),
@@ -102,9 +105,9 @@ public class AssociadoServiceTest {
 		String cpf = "15016460019";
 		Associado associadoAtualizado = SerializationUtils.clone(associado);
 		associadoAtualizado.setCPF(cpf);
-		when(this.associadoService.verificaExistePorId(Mockito.anyLong())).thenReturn(true);
-		when(this.associadoRepository.findByCPF(Mockito.anyString())).thenReturn(Optional.of(associado));
-		when(this.associadoRepository.save(Mockito.any(Associado.class))).thenReturn(associadoAtualizado);
+		doReturn(true).when(this.associadoService).verificaExistePorId(Mockito.anyLong());
+		doReturn(Optional.of(associado)).when(this.associadoRepository).findByCPF(Mockito.anyString());
+		doReturn(associadoAtualizado).when(this.associadoRepository).save(Mockito.any(Associado.class));
 		associadoAtualizado = this.associadoService.atualizar(associadoAtualizado);
 		assertNotNull(associadoAtualizado);
 		assertTrue(new ReflectionEquals(associadoAtualizado, "CPF").matches(associado));
@@ -115,7 +118,7 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica deletar associado")
 	void deletarAssociado() throws NotFoundException {
 		Long id = Long.valueOf(1);
-		when(this.associadoService.verificaExistePorId(Mockito.anyLong())).thenReturn(true);
+		doReturn(true).when(this.associadoService).verificaExistePorId(Mockito.anyLong());
 		this.associadoService.deletar(id);
 		verify(this.associadoRepository).deleteById(id);
 	}
@@ -123,7 +126,7 @@ public class AssociadoServiceTest {
 	@Test
 	@DisplayName("Verifica deletar associado inexistente")
 	void deletarAssociadoInexistente() throws NotFoundException {
-		when(this.associadoService.verificaExistePorId(Mockito.anyLong())).thenReturn(false);
+		doReturn(false).when(this.associadoService).verificaExistePorId(Mockito.anyLong());
 		assertThrows(NotFoundException.class, () -> this.associadoService.deletar(Long.valueOf(1)),
 				"Associado inexistente");
 	}
@@ -132,8 +135,8 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica obter associado por id")
 	void obterAssociadoPorId() throws NotFoundException {
 		Associado associado = criaAssociado();
-		when(this.associadoRepository.findById(Mockito.anyLong()))
-				.thenReturn(Optional.of(SerializationUtils.clone(associado)));
+		doReturn(Optional.of(SerializationUtils.clone(associado))).when(this.associadoRepository)
+				.findById(Mockito.anyLong());
 		Associado associadoRetornado = this.associadoService.obterPorId(Long.valueOf(1));
 		assertNotNull(associadoRetornado);
 		assertTrue(new ReflectionEquals(associadoRetornado).matches(associado));
@@ -142,7 +145,7 @@ public class AssociadoServiceTest {
 	@Test
 	@DisplayName("Verifica obter associado por id inexistente")
 	void obterAssociadoPorIdInexistente() throws NotFoundException {
-		when(this.associadoRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
+		doReturn(Optional.empty()).when(this.associadoRepository).findById(Mockito.anyLong());
 		assertThrows(NotFoundException.class, () -> this.associadoService.obterPorId(Long.valueOf(1)),
 				"Associado inexistente");
 	}
@@ -151,8 +154,9 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica obter todos")
 	void obterTodos() throws NotFoundException {
 		List<Associado> associados = asList(criaAssociado(), criaAssociadoDois());
-		doReturn(associados).when(this.associadoRepository).findAll();
-		List<Associado> associadosRetornados = this.associadoService.obterTodos();
+		doReturn(new PageImpl<Associado>(associados)).when(this.associadoRepository)
+				.findAll(Mockito.any(Pageable.class));
+		List<Associado> associadosRetornados = this.associadoService.obterTodos(0, 10, "id").getContent();
 		assertEquals(associados.size(), associadosRetornados.size());
 	}
 
@@ -160,8 +164,8 @@ public class AssociadoServiceTest {
 	@DisplayName("Verifica obter associado por CPF")
 	void obterAssociadoPorCPF() throws NotFoundException {
 		Associado associado = criaAssociado();
-		when(this.associadoRepository.findByCPF(Mockito.anyString()))
-				.thenReturn(Optional.of(SerializationUtils.clone(associado)));
+		doReturn(Optional.of(SerializationUtils.clone(associado))).when(this.associadoRepository)
+				.findByCPF(Mockito.anyString());
 		Optional<Associado> optionalAssociado = this.associadoService.obterPorCPF("03492767141");
 		assertNotNull(optionalAssociado);
 		assertTrue(optionalAssociado.isPresent());
@@ -172,7 +176,7 @@ public class AssociadoServiceTest {
 	@Test
 	@DisplayName("Verifica obter associado por CPF inexistente")
 	void obterAssociadoPorCPFInexistente() throws NotFoundException {
-		when(this.associadoRepository.findByCPF(Mockito.anyString())).thenReturn(Optional.empty());
+		doReturn(Optional.empty()).when(this.associadoRepository).findByCPF(Mockito.anyString());
 		Optional<Associado> optionalAssociado = this.associadoService.obterPorCPF("03492767141");
 		assertTrue(!optionalAssociado.isPresent());
 	}
@@ -180,8 +184,7 @@ public class AssociadoServiceTest {
 	@Test
 	@DisplayName("Verifica se associado existe por id")
 	void verificaExistePorId() throws NotFoundException {
-		when(this.associadoRepository.existsById(Mockito.anyLong())).thenReturn(true);
+		doReturn(true).when(this.associadoRepository).existsById(Mockito.anyLong());
 		assertTrue(this.associadoService.verificaExistePorId(Long.valueOf(1)));
 	}
-
 }

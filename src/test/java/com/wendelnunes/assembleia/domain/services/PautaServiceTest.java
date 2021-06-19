@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +21,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.wendelnunes.assembleia.domain.entities.Pauta;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
@@ -128,8 +129,8 @@ public class PautaServiceTest {
 	@DisplayName("Verifica obter todas pautas")
 	void obterTodos() throws NotFoundException {
 		List<Pauta> pautas = asList(criaPauta(), criaPautaDois());
-		doReturn(pautas).when(this.pautaRepository).findAll();
-		List<Pauta> pautasRetornadas = this.pautaService.obterTodos();
+		when(this.pautaRepository.findAll(Mockito.any(Pageable.class))).thenReturn(new PageImpl<Pauta>(pautas));
+		List<Pauta> pautasRetornadas = this.pautaService.obterTodos(0, 10, "id").getContent();
 		assertEquals(pautas.size(), pautasRetornadas.size());
 	}
 
@@ -137,7 +138,7 @@ public class PautaServiceTest {
 	@DisplayName("Verifica obter pauta por id")
 	void obterPautaPorId() throws NotFoundException {
 		Pauta pauta = criaPauta();
-		doReturn(Optional.of(SerializationUtils.clone(pauta))).when(this.pautaRepository).findById(Mockito.anyLong());
+		when(this.pautaRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(SerializationUtils.clone(pauta)));
 		Pauta pautaRetornada = this.pautaService.obterPorId(pauta.getId());
 		assertNotNull(pautaRetornada);
 		assertTrue(new ReflectionEquals(pautaRetornada).matches(pauta));

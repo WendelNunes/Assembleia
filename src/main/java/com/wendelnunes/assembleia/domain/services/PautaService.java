@@ -1,7 +1,13 @@
 package com.wendelnunes.assembleia.domain.services;
 
-import java.util.List;
+import static com.wendelnunes.assembleia.utils.SortUtil.createOrders;
 
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.wendelnunes.assembleia.domain.entities.Pauta;
@@ -36,8 +42,10 @@ public class PautaService {
 		this.repository.deleteById(id);
 	}
 
-	public List<Pauta> obterTodos() {
-		return this.repository.findAll();
+	public Page<Pauta> obterTodos(Integer page, Integer pageSize, String... sort) {
+		Pageable paging = PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(10),
+				Sort.by(createOrders(sort)));
+		return this.repository.findAll(paging);
 	}
 
 	public Pauta obterPorId(Long id) throws NotFoundException {

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -102,8 +104,10 @@ public class PautaController {
 			@ApiResponse(code = 500, message = "Erro interno do servidor", response = ErrorResponseDTO.class), //
 	})
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<PautaDTO>> obterTodos() {
+	public ResponseEntity<List<PautaDTO>> obterTodos(@RequestParam(defaultValue = "0") Integer page,
+			@RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(defaultValue = "id") String[] sortBy) {
+		Page<Pauta> pageResult = this.pautaService.obterTodos(page, pageSize, sortBy);
 		return ResponseEntity.ok()
-				.body(this.pautaService.obterTodos().stream().map(PautaDTO::from).collect(Collectors.toList()));
+				.body(pageResult.getContent().stream().map(PautaDTO::from).collect(Collectors.toList()));
 	}
 }

@@ -9,6 +9,8 @@ import org.modelmapper.ModelMapper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
 
 import io.swagger.annotations.ApiModel;
@@ -19,6 +21,7 @@ import lombok.Data;
 @ApiModel(value = "Sessao")
 public class SessaoDTO {
 
+	@JsonProperty(access = Access.READ_ONLY)
 	private Long id;
 	@NotNull(message = "Id da pauta deve ser informado")
 	private Long idPauta;

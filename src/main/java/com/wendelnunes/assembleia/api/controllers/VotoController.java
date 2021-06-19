@@ -19,11 +19,13 @@ import com.wendelnunes.assembleia.exceptions.ConflictException;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
 
+@Api(tags = { "Voto" })
 @RestController
 @RequestMapping("/votos")
 @AllArgsConstructor

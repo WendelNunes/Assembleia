@@ -1,10 +1,15 @@
 package com.wendelnunes.assembleia.domain.services;
 
+import static com.wendelnunes.assembleia.utils.SortUtil.createOrders;
+
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.wendelnunes.assembleia.domain.entities.Sessao;
@@ -53,7 +58,9 @@ public class SessaoService {
 		return this.sessaoRepository.findById(id).orElseThrow(() -> new NotFoundException("Sessão inexistente"));
 	}
 
-	public List<Sessao> obterTodos() {
-		return this.sessaoRepository.findAll();
+	public Page<Sessao> obterTodos(Integer page, Integer pageSize, String... sort) {
+		Pageable paging = PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(10),
+				Sort.by(createOrders(sort)));
+		return this.sessaoRepository.findAll(paging);
 	}
 }

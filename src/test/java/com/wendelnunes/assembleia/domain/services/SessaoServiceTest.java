@@ -21,6 +21,8 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.wendelnunes.assembleia.domain.entities.Pauta;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
@@ -129,10 +131,10 @@ class SessaoServiceTest {
 	@Test
 	@DisplayName("Verifica obter todas sessões")
 	void obterTodos() throws NotFoundException {
-		List<Sessao> sessaos = asList(criaSessao(), criaSessaoDois());
-		doReturn(sessaos).when(this.sessaoRepository).findAll();
-		List<Sessao> sessaosRetornadas = this.sessaoService.obterTodos();
-		assertEquals(sessaos.size(), sessaosRetornadas.size());
+		List<Sessao> sessoes = asList(criaSessao(), criaSessaoDois());
+		doReturn(new PageImpl<Sessao>(sessoes)).when(this.sessaoRepository).findAll(Mockito.any(Pageable.class));
+		List<Sessao> sessaosRetornadas = this.sessaoService.obterTodos(0, 10, "id").getContent();
+		assertEquals(sessoes.size(), sessaosRetornadas.size());
 	}
 
 	@Test
