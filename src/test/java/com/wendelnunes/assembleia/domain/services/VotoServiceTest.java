@@ -42,6 +42,8 @@ class VotoServiceTest {
 	private AssociadoService associadoService;
 	@Mock
 	private UserInfoClient userInfoClient;
+	@Mock
+	private Sessao sessao;
 	@InjectMocks
 	@Spy
 	private VotoService votoService;
@@ -82,7 +84,7 @@ class VotoServiceTest {
 	void votar() throws NotFoundException, DateTimeException, ConflictException, JsonMappingException,
 			JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
+		doReturn(true).when(this.sessao).isAberta();
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
 		doReturn(true).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
@@ -102,7 +104,7 @@ class VotoServiceTest {
 		OffsetDateTime currentDateTime = OffsetDateTime.now();
 		voto.getSessao().setDataHoraInicio(currentDateTime.minusHours(2));
 		voto.getSessao().setDataHoraFechamento(currentDateTime.minusHours(1));
-		doReturn(false).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
+		doReturn(false).when(this.sessao).isAberta();
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
 		doReturn(true).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
@@ -116,7 +118,7 @@ class VotoServiceTest {
 	void votarAssociadoInexistente() throws NotFoundException, DateTimeException, ConflictException,
 			JsonMappingException, JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
+		doReturn(true).when(this.sessao).isAberta();
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.empty()).when(this.associadoService).obterPorCPF(Mockito.anyString());
 		assertThrows(NotFoundException.class,
@@ -129,7 +131,7 @@ class VotoServiceTest {
 	void votarAssociadoNaoVotante() throws NotFoundException, DateTimeException, ConflictException,
 			JsonMappingException, JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
+		doReturn(true).when(this.sessao).isAberta();
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
 		doReturn(false).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());
@@ -143,7 +145,7 @@ class VotoServiceTest {
 	void votarAssociadoJaVotou() throws NotFoundException, DateTimeException, ConflictException, JsonMappingException,
 			JsonProcessingException, BadRequestException {
 		Voto voto = criaVoto();
-		doReturn(true).when(this.votoService).verificaSessaoAberta(Mockito.any(Sessao.class));
+		doReturn(true).when(this.sessao).isAberta();
 		doReturn(voto.getSessao()).when(this.sessaoService).obterPorId(Mockito.anyLong());
 		doReturn(Optional.of(voto.getAssociado())).when(this.associadoService).obterPorCPF(Mockito.anyString());
 		doReturn(true).when(this.userInfoClient).verificaAssociadoVotante(Mockito.anyString());

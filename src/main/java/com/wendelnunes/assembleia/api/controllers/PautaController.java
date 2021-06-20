@@ -32,11 +32,13 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Api(tags = { "Pauta" })
 @RestController
 @RequestMapping("/pautas")
 @AllArgsConstructor
+@Slf4j
 public class PautaController {
 
 	public PautaService pautaService;
@@ -49,6 +51,7 @@ public class PautaController {
 	})
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PautaDTO> criar(@Valid @RequestBody PautaDTO pauta) {
+		log.debug("REST requisição para salvar pauta: {}", pauta);
 		Pauta pautaSalvo = this.pautaService.criar(PautaDTO.toPauta(pauta));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
@@ -67,6 +70,7 @@ public class PautaController {
 	@PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PautaDTO> atualizar(@PathVariable("id") Long id, @Valid @RequestBody PautaDTO pauta)
 			throws NotFoundException {
+		log.debug("REST requisição para atualizar pauta({}): {}", id, pauta);
 		Pauta p = PautaDTO.toPauta(pauta);
 		p.setId(id);
 		Pauta updated = this.pautaService.atualizar(p);
@@ -82,6 +86,7 @@ public class PautaController {
 	})
 	@DeleteMapping("/{id}")
 	public ResponseEntity<?> deletar(@PathVariable("id") Long id) throws NotFoundException, NotDeleteException {
+		log.debug("REST requisição para deletar pauta: {}", id);
 		this.pautaService.deletar(id);
 		return ResponseEntity.ok().build();
 	}
@@ -95,6 +100,7 @@ public class PautaController {
 	})
 	@GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<PautaDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
+		log.debug("REST requisição para obter pauta: {}", id);
 		return ResponseEntity.ok().body(PautaDTO.from(this.pautaService.obterPorId(id)));
 	}
 
@@ -106,6 +112,7 @@ public class PautaController {
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<PautaDTO>> obterTodos(@RequestParam(defaultValue = "0") Integer page,
 			@RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(defaultValue = "id") String[] sortBy) {
+		log.debug("REST requisição para obter todas pautas: Page {}, pageSize {}, sortBy {}", page, pageSize, sortBy);
 		Page<Pauta> pageResult = this.pautaService.obterTodos(page, pageSize, sortBy);
 		return ResponseEntity.ok()
 				.body(pageResult.getContent().stream().map(PautaDTO::from).collect(Collectors.toList()));

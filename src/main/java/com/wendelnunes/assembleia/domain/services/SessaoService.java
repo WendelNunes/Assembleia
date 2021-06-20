@@ -4,6 +4,7 @@ import static com.wendelnunes.assembleia.utils.SortUtil.createOrders;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.wendelnunes.assembleia.domain.entities.ResultadoSessao;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
 import com.wendelnunes.assembleia.domain.repositories.SessaoRepository;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
@@ -62,5 +64,14 @@ public class SessaoService {
 		Pageable paging = PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(10),
 				Sort.by(createOrders(sort)));
 		return this.sessaoRepository.findAll(paging);
+	}
+
+	public ResultadoSessao obterResultadoPorIdSessao(Long idSessao) throws NotFoundException {
+		Sessao sessao = this.sessaoRepository.findById(idSessao)
+				.orElseThrow(() -> new NotFoundException("Sessão inexistente"));
+		List<Object[]> resultado = this.sessaoRepository.obterResultadoPorIdSessao(idSessao);
+		Integer totalSim = Optional.ofNullable(resultado.get(0)[0]).map(i -> Integer.valueOf(i.toString())).orElse(0);
+		Integer totalNao = Optional.ofNullable(resultado.get(0)[1]).map(i -> Integer.valueOf(i.toString())).orElse(0);
+		return new ResultadoSessao(sessao.getId(), sessao.isAberta(), totalSim, totalNao);
 	}
 }

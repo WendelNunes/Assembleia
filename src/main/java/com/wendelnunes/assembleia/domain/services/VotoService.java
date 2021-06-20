@@ -2,8 +2,6 @@ package com.wendelnunes.assembleia.domain.services;
 
 import static com.wendelnunes.assembleia.utils.StringUtil.removeMask;
 
-import java.time.OffsetDateTime;
-
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,7 +30,7 @@ public class VotoService {
 	public Voto votar(Long idSessao, String CPF, Boolean valor) throws NotFoundException, DateTimeException,
 			ConflictException, JsonMappingException, JsonProcessingException, BadRequestException {
 		Sessao sessao = this.sessaoService.obterPorId(idSessao);
-		if (!this.verificaSessaoAberta(sessao)) {
+		if (!sessao.isAberta()) {
 			throw new DateTimeException("Sessão não está aberta");
 		}
 		CPF = removeMask(CPF);
@@ -49,11 +47,6 @@ public class VotoService {
 		voto.setAssociado(associado);
 		voto.setValor(valor);
 		return this.votoRepository.save(voto);
-	}
-
-	public boolean verificaSessaoAberta(Sessao sessao) {
-		OffsetDateTime now = OffsetDateTime.now();
-		return now.compareTo(sessao.getDataHoraInicio()) >= 0 && now.compareTo(sessao.getDataHoraFechamento()) <= 0;
 	}
 
 	public boolean verificaExistePorIdSessaoIdAssociado(Long idSessao, Long idAssociado) {

@@ -24,11 +24,13 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Api(tags = { "Voto" })
 @RestController
 @RequestMapping("/votos")
 @AllArgsConstructor
+@Slf4j
 public class VotoController {
 
 	private VotoService votoService;
@@ -43,7 +45,8 @@ public class VotoController {
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> votar(@Valid @RequestBody VotoDTO voto) throws NotFoundException, DateTimeException,
 			ConflictException, JsonMappingException, JsonProcessingException, BadRequestException {
-		this.votoService.votar(voto.getIdSessao(), voto.getCpf(), voto.getValor());
+		log.debug("REST requisição realizar voto: {}", voto);
+		this.votoService.votar(voto.getIdSessao(), voto.getCPF(), voto.getValor());
 		return ResponseEntity.ok().build();
 	}
 }

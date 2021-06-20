@@ -10,4 +10,8 @@ public class NotDeleteException extends Exception {
 	public NotDeleteException(String message) {
 		super(message);
 	}
+
+	public NotDeleteException() {
+		super();
+	}
 }

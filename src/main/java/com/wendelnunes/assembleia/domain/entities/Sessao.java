@@ -40,4 +40,9 @@ public class Sessao implements Serializable {
 	private OffsetDateTime dataHoraInicio;
 	@Column(name = "data_hora_fechamento")
 	private OffsetDateTime dataHoraFechamento;
+
+	public boolean isAberta() {
+		OffsetDateTime now = OffsetDateTime.now();
+		return now.compareTo(this.dataHoraInicio) >= 0 && now.compareTo(this.dataHoraFechamento) <= 0;
+	}
 }

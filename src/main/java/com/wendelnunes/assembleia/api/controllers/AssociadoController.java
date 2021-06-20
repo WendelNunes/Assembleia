@@ -32,11 +32,13 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Api(tags = { "Associado" })
 @RestController
 @RequestMapping("/associados")
 @AllArgsConstructor
+@Slf4j
 public class AssociadoController {
 
 	public AssociadoService associadoService;
@@ -50,6 +52,7 @@ public class AssociadoController {
 	})
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AssociadoDTO> criar(@Valid @RequestBody AssociadoDTO associado) throws ConflictException {
+		log.debug("REST requisição para salvar associado: {}", associado);
 		Associado associadoSalvo = this.associadoService.criar(AssociadoDTO.toAssociado(associado));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
@@ -69,6 +72,7 @@ public class AssociadoController {
 	@PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AssociadoDTO> atualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody AssociadoDTO associado) throws ConflictException, NotFoundException {
+		log.debug("REST requisição para atualizar associado({}): {}", id, associado);
 		Associado a = AssociadoDTO.toAssociado(associado);
 		a.setId(id);
 		Associado updated = this.associadoService.atualizar(a);
@@ -84,6 +88,7 @@ public class AssociadoController {
 	})
 	@DeleteMapping("/{id}")
 	public ResponseEntity<?> deletar(@PathVariable("id") Long id) throws NotFoundException {
+		log.debug("REST requisição para deletar associado: {}", id);
 		this.associadoService.deletar(id);
 		return ResponseEntity.ok().build();
 	}
@@ -97,6 +102,7 @@ public class AssociadoController {
 	})
 	@GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<AssociadoDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
+		log.debug("REST requisição para obter associado: {}", id);
 		return ResponseEntity.ok().body(AssociadoDTO.from(this.associadoService.obterPorId(id)));
 	}
 
@@ -108,6 +114,8 @@ public class AssociadoController {
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<AssociadoDTO>> obterTodos(@RequestParam(defaultValue = "0") Integer page,
 			@RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(defaultValue = "id") String[] sortBy) {
+		log.debug("REST requisição para obter todos associados: Page {}, pageSize {}, sortBy {}", page, pageSize,
+				sortBy);
 		Page<Associado> pageResult = this.associadoService.obterTodos(page, pageSize, sortBy);
 		return ResponseEntity.ok()
 				.body(pageResult.getContent().stream().map(AssociadoDTO::from).collect(Collectors.toList()));

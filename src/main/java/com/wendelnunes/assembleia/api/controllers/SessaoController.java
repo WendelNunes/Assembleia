@@ -23,7 +23,6 @@ import com.wendelnunes.assembleia.api.dtos.ResultadoSessaoDTO;
 import com.wendelnunes.assembleia.api.dtos.SessaoDTO;
 import com.wendelnunes.assembleia.domain.entities.ResultadoSessao;
 import com.wendelnunes.assembleia.domain.entities.Sessao;
-import com.wendelnunes.assembleia.domain.services.ResultadoSessaoService;
 import com.wendelnunes.assembleia.domain.services.SessaoService;
 import com.wendelnunes.assembleia.exceptions.DateTimeException;
 import com.wendelnunes.assembleia.exceptions.NotFoundException;
@@ -33,15 +32,16 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Api(tags = { "Sessão" })
 @RestController
 @RequestMapping("/sessoes")
 @AllArgsConstructor
+@Slf4j
 public class SessaoController {
 
 	private SessaoService sessaoService;
-	private ResultadoSessaoService resultadoSessaoService;
 
 	@ApiOperation(value = "Abre uma nova sessão para a pauta")
 	@ApiResponses(value = { //
@@ -53,6 +53,7 @@ public class SessaoController {
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<SessaoDTO> abrirSessao(@Valid @RequestBody SessaoDTO sessao)
 			throws DateTimeException, NotFoundException {
+		log.debug("REST requisição para salvar sessão: {}", sessao);
 		Sessao created = this.sessaoService.abrir(SessaoDTO.toSessao(sessao));
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest() //
 				.path("/{id}") //
@@ -70,6 +71,7 @@ public class SessaoController {
 	})
 	@GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<SessaoDTO> obterPorId(@PathVariable("id") Long id) throws NotFoundException {
+		log.debug("REST requisição para obter sessão: {}", id);
 		return ResponseEntity.ok().body(SessaoDTO.from(this.sessaoService.obterPorId(id)));
 	}
 
@@ -81,6 +83,7 @@ public class SessaoController {
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<SessaoDTO>> obterTodos(@RequestParam(defaultValue = "0") Integer page,
 			@RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(defaultValue = "id") String[] sortBy) {
+		log.debug("REST requisição para obter todas sessões: Page {}, pageSize {}, sortBy {}", page, pageSize, sortBy);
 		Page<Sessao> pageResult = this.sessaoService.obterTodos(page, pageSize, sortBy);
 		return ResponseEntity.ok()
 				.body(pageResult.getContent().stream().map(SessaoDTO::from).collect(Collectors.toList()));
@@ -94,7 +97,8 @@ public class SessaoController {
 	})
 	@GetMapping(value = "/{id}/resultado", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResultadoSessaoDTO> obterResultado(@PathVariable("id") Long id) throws NotFoundException {
-		ResultadoSessao resultadoSessao = this.resultadoSessaoService.obterPorIdSessao(id);
+		log.debug("REST requisição para obter resultado da sessão: {}", id);
+		ResultadoSessao resultadoSessao = this.sessaoService.obterResultadoPorIdSessao(id);
 		return ResponseEntity.ok().body(ResultadoSessaoDTO.from(resultadoSessao));
 	}
 }

@@ -16,8 +16,8 @@ import lombok.Data;
 @ApiModel(value = "ResultadoSessao")
 public class ResultadoSessaoDTO {
 
-	@JsonProperty(value = "idSessao")
-	private Long id;
+	@JsonProperty(access = Access.READ_ONLY)
+	private Long idSessao;
 	@JsonProperty(access = Access.READ_ONLY)
 	private Boolean aberta;
 	@JsonProperty(access = Access.READ_ONLY)
