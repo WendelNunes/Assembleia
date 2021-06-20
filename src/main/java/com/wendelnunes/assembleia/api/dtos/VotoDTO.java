@@ -4,12 +4,10 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.br.CPF;
-import org.modelmapper.ModelMapper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wendelnunes.assembleia.domain.entities.Voto;
 
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
@@ -27,8 +25,4 @@ public class VotoDTO {
 	private String CPF;
 	@NotNull(message = "Valor deve ser informado")
 	private Boolean valor;
-
-	public static VotoDTO from(Voto voto) {
-		return new ModelMapper().map(voto, VotoDTO.class);
-	}
 }
